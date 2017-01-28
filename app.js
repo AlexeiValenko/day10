@@ -36,7 +36,7 @@ var users = [
     { login : 2 , password : 222, permissions : 3 },       // delete | read
     { login : 3 , password : 333, permissions : 1 },       // read
     { login : 4 , password : 444, permissions : 0 }        // no permissions
-]
+];
 var currentUser = 0;
 const READ   = 1; //001
 const DELETE = 2; //010
@@ -53,24 +53,20 @@ function main() {
 }
 
 function login() {
-    var userName  = readlineSync.question("Login :");
-    var userPassword = readlineSync.question("Password :", { hideEchoBack: true });
+    var userName  = readlineSync.question('Login :');
+    var userPassword = readlineSync.question('Password :', { hideEchoBack: true });
     for(var i in users) {
         if(users[i].login == userName && users[i].password == userPassword){
             currentUser = i;
             return;
         }
     }
-    console.log("Error! No such user");
+    console.log('Error! No such user');
     exit = true;
 }
 
 function checkPermission(mode){
     return users[currentUser].permissions & mode;
-}
-
-function getPermission() {
-    return users[currentUser].permissions;
 }
 
 function showMenu() {
@@ -189,22 +185,22 @@ function printCurrentFolder() {
 
 function deleteFile() {
     if(!checkPermission(DELETE)){
-        console.log("Error! You have now permission for this operation");
+        console.log('Error! You have now permission for this operation');
         return;
     }
 
-    var fileName = readlineSync.question("Insert file/folder name :");
+    var fileName = readlineSync.question('Insert file/folder name :');
 
     var currentFolder = findCurrentFolder();
 
     for(var i in currentFolder.children) {
         if(childName(currentFolder,i) == fileName) {
             deleteChild(currentFolder,i);
-            console.log(fileName," deleted successfully");
+            console.log(fileName,' deleted successfully');
             return;
         }
     }
-    console.log("Error! No such file or directory");
+    console.log('Error! No such file or directory');
 }
 
 function createFile() {
@@ -243,16 +239,14 @@ function createFile() {
 }
 
 function changeCurrentFolder() {
-    var folderName = readlineSync.question("Insert folder name or [..]  :");
-
+    var folderName = readlineSync.question('Insert folder name or [..]  :');
     var found = false;
 
     if(folderName == '..') {
         if(currentFolderId == 0) {
-            console.log("Error! You in the root");
+            console.log('Error! You in the root');
             return;
         }
-
         currentFolderId = findFather().id;
         found = true;
     } else {
@@ -263,27 +257,27 @@ function changeCurrentFolder() {
                     currentFolderId = childId(currentFolder,i);
                     found = true;
                 } else {
-                    console.log("Error! ", folderName, " is file name");
+                    console.log('Error! ', folderName, ' is file name');
                     return;
                 }
             }
         }
     }
 
-    if(!found) console.log("Error! No such directory");
+    if(!found) console.log('Error! No such directory');
     printCurrentFolder();
 }
 
 function openFile() {
     if(!checkPermission(READ)){
-        console.log("Error! You have now permission for this operation");
+        console.log('Error! You have now permission for this operation');
         return;
     }
 
-    var fileName = readlineSync.question("Insert file name :");
+    var fileName = readlineSync.question('Insert file name :');
 
     if(fileName == '') {
-        console.log("Error! File name can not be empty.");
+        console.log('Error! File name can not be empty.');
         return;
     }
 
@@ -292,15 +286,14 @@ function openFile() {
     for(var i in currentFolder.children ) {
         if(childName(currentFolder,i) == fileName ) {
             if (childType(currentFolder,i) == 'file') {
-                console.log("** ", childContent(currentFolder,i), " **");
+                console.log('** ', childContent(currentFolder,i), ' **');
                 return;
             } else {
-                console.log("Error! ", folderName, " is folder name");
+                console.log('Error! ', folderName, ' is folder name');
             }
         }
-
     }
-    console.log("Error! No such file in current directory");
+    console.log('Error! No such file in current directory');
 }
 
 function quitProgram() {
@@ -311,7 +304,6 @@ function quitProgram() {
         exit = true;
         console.log("Have a good day!");
     }
-
 }
 
 function saveSystemToFile() {
@@ -334,9 +326,10 @@ function readSystemFromFile() {
     try {
         flatSystem = JSON.parse(fs.readFileSync('file_system.txt', 'UTF-8'));
         makeSystemTree();
+        console.log('System was red successfully');
     } catch(e) {
         fsStorage.push(root);
-        console.log("Error! Could not read file, using empty file system");
+        console.log('Error! Could not read file, using empty file system');
         return;
     }
 }
@@ -377,16 +370,13 @@ function makeSystemTree() {
         for (var i = 0; i < flatSystem.length; i++) {
             if (flatSystem[i].id == 0) {  // find root
                 nodeTreatment(fsStorage,flatSystem[i]);
-                flatSystem.splice(i, 1);
                 break;
             }
         }
-
         if (!fsStorage[0]) throw new Error('Wrong fields');
-
         addToSystemTreeChilds(fsStorage[0]);
     } catch(e) {
-        console.log("Error!Bad input file, using empty file system");
+        console.log('Error!Bad input file, using empty file system');
         fsStorage = [];
         lastId = 0;
     }
@@ -408,8 +398,7 @@ function addToSystemTreeChilds(father) {
     flatSystem.forEach(function(child, index) {
         if(child['father'] == father['id']) {
             nodeTreatment(father.children,child);
-            flatSystem.splice(index,1);
-            addToSystemTreeChilds(child);
+            if(child.type == 'directory') addToSystemTreeChilds(child);
         }
     });
 }

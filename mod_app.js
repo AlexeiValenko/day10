@@ -20,9 +20,8 @@ fsStorage.push(root);
 var currentFolderId = 0;
 var lastId = 0;
 
-var tmpLastId = 0;
 var tmpFsStorage = [];
-var treatedNodes = 0;
+var tmpLastId = 0;
 
 var menu = [
     'Print current folder',
@@ -74,6 +73,8 @@ function checkPermission(mode){
 }
 
 function showMenu() {
+
+
     var choise = readlineSync.keyInSelect(menu,'Please make your choise : ');
 
     switch(choise) {
@@ -323,19 +324,18 @@ function saveSystemToFile() {
 function readSystemFromFile() {
     tmpFsStorage = [];
     tmpLastId = 0;
-    treatedNodes = 0;
 
     try {
         flatSystem = JSON.parse(fs.readFileSync('file_system.txt', 'UTF-8'));
-        checkIdsAreUnique();
+//        checkUniqueIds();
         makeSystemTree();
-        if(treatedNodes < flatSystem.length) throw new Error("Extra data");
-        lastId = tmpLastId;
+        if(flatSystem.length > 0) throw new Error('Wrong data in file');
         fsStorage = tmpFsStorage;
+        lastId = tmpLastId;
         currentFolderId = 0;
         console.log('System was red successfully');
     } catch(e) {
-        console.log('Error! Could not read file, using current file system');
+        console.log('Error! Could not read file, using current system');
         return;
     }
 }
@@ -375,6 +375,7 @@ function makeSystemTree() {
     for (var i = 0; i < flatSystem.length; i++) {
         if (flatSystem[i].id == 0) {  // find root
             nodeTreatment(tmpFsStorage, flatSystem[i]);
+            flatSystem.splice(i,1);
             break;
         }
     }
@@ -385,38 +386,38 @@ function makeSystemTree() {
 function nodeTreatment(container,node) {
     if(!checkFields(node)) throw new Error('Wrong fields');
     delete node.father;
-    if(isFolder(node)) node['children'] = [];
+    if(node.type == 'directory') node['children'] = [];
     container.push(node);
     updateLastId(node.id);
-    treatedNodes++;
-}
-
-function isFolder(node) {
-    return node.type == 'directory';
 }
 
 function updateLastId(newId) {
-    tmpLastId = newId > tmpLastId ? newId : lastId;
+    lastId = newId > lastId ? newId : lastId;
 }
 
 function addToSystemTreeChilds(father) {
-    flatSystem.forEach(function(child, index) {
-        if(child['father'] == father['id']) {
-            nodeTreatment(father.children,child);
-            if(isFolder(child)) addToSystemTreeChilds(child);
+    for(var i = 0; i < flatSystem.length; i++) {
+        var node = flatSystem[i];
+        if(node['father'] == father['id']) {
+            nodeTreatment(father.children,node);
+            flatSystem.splice(i,1);
+            i--; // next element move one position
+            if(node.type == 'directory') addToSystemTreeChilds(child);
         }
-    });
-}
-
-function checkIdsAreUnique() {
-    var tmp = [];
-    flatSystem.forEach( function(node) {
-        if(!node['id'] && tmp.includes(node.id)) throw new Error('Not unique id');
-        tmp.push(node.id);
-    });
+    }
 }
 
 function checkFields(node) {
-    return 'id' in node && 'father' in node && 'type' in node && 'name' in node &&
+    return 'id' in node && 'father' in node && 'type' in node &&
         ((node.type == 'file' && 'content' in node ) || node.type == 'directory');
+}
+
+function checkUniqueIds() {
+    var tmp = [];
+    for(var i = 0; i < flatSystem.length; i++) {
+        if (!flatSystem[i]['id'])
+            if( tmp.includes(flatSystem[i][id]))
+                throw new Error('Not unique id');
+        tmp.push(flatSystem[i][id]);
+    }
 }
